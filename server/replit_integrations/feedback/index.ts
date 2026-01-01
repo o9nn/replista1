@@ -1,0 +1,2 @@
+
+export { registerFeedbackRoutes } from "./routes";
