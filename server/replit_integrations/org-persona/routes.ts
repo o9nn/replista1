@@ -216,9 +216,9 @@ export function registerOrgPersonaRoutes(app: Express): void {
   app.get("/api/org-persona/core-identity", async (req: Request, res: Response) => {
     try {
       const artifacts = await orgPersonaStorage.getArtifactsByCognitiveFeature("reasoning");
-      const coreIdentity = artifacts.find((a: any) => 
-        a.content?.document === "CORE_IDENTITY.md" || 
-        a.metadata?.philosophicalFramework
+      const coreIdentity = artifacts.find((a) => 
+        (a.content?.document === "CORE_IDENTITY.md" && a.metadata?.philosophicalFramework) ||
+        (a.content?.isFoundational === true && a.content?.selfReferential === true)
       );
       
       if (!coreIdentity) {
@@ -247,7 +247,8 @@ export function registerOrgPersonaRoutes(app: Express): void {
   app.get("/api/org-persona/memory/:type", async (req: Request, res: Response) => {
     try {
       const { type } = req.params;
-      const limit = parseInt(req.query.limit as string) || 10;
+      const limitParam = parseInt(req.query.limit as string);
+      const limit = isNaN(limitParam) ? 10 : Math.min(Math.max(limitParam, 1), 100);
       const memories = await orgPersonaStorage.retrieveMemory(type, limit);
       res.json(memories);
     } catch (error) {
@@ -282,6 +283,9 @@ export function registerOrgPersonaRoutes(app: Express): void {
   app.get("/api/org-persona/participants/:id/hyperedges", async (req: Request, res: Response) => {
     try {
       const participantId = parseInt(req.params.id);
+      if (isNaN(participantId)) {
+        return res.status(400).json({ error: "Invalid participant ID" });
+      }
       const hyperedges = await orgPersonaStorage.getHyperedgesForParticipant(participantId);
       res.json(hyperedges);
     } catch (error) {
