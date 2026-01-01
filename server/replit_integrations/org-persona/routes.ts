@@ -310,7 +310,20 @@ export function registerOrgPersonaRoutes(app: Express): void {
     try {
       const { domain } = req.params;
       const { proficiencyDelta, practiceIncrement } = req.body;
-      await orgPersonaStorage.updateSkillset(domain, proficiencyDelta || 0, practiceIncrement || 1);
+      
+      // Validate inputs
+      const delta = typeof proficiencyDelta === 'number' ? proficiencyDelta : 0;
+      const increment = typeof practiceIncrement === 'number' ? practiceIncrement : 1;
+      
+      // Validate ranges
+      if (delta < -100 || delta > 100) {
+        return res.status(400).json({ error: "proficiencyDelta must be between -100 and 100" });
+      }
+      if (increment < 0) {
+        return res.status(400).json({ error: "practiceIncrement must be non-negative" });
+      }
+      
+      await orgPersonaStorage.updateSkillset(domain, delta, increment);
       res.json({ success: true, domain });
     } catch (error) {
       console.error("Error updating skillset:", error);
