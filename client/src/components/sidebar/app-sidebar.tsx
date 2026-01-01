@@ -317,7 +317,8 @@ export function AppSidebar({ onNewSession, onSelectFile, selectedFileId }: AppSi
                 <ScreenshotPanel />
               </TabsContent>
           </Tabs>
-        </SidebarContent>
+        </SidebarGroup>
+      </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-sidebar-border">
         <Collapsible className="w-full">
