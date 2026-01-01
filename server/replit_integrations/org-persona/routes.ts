@@ -188,4 +188,146 @@ export function registerOrgPersonaRoutes(app: Express): void {
       res.status(500).json({ error: "Failed to fetch insights" });
     }
   });
+
+  // Get artifacts by cognitive feature
+  app.get("/api/org-persona/artifacts/:feature", async (req: Request, res: Response) => {
+    try {
+      const { feature } = req.params;
+      const artifacts = await orgPersonaStorage.getArtifactsByCognitiveFeature(feature);
+      res.json(artifacts);
+    } catch (error) {
+      console.error("Error fetching artifacts:", error);
+      res.status(500).json({ error: "Failed to fetch artifacts" });
+    }
+  });
+
+  // Create a new artifact
+  app.post("/api/org-persona/artifacts", async (req: Request, res: Response) => {
+    try {
+      const artifact = await orgPersonaStorage.createArtifact(req.body);
+      res.status(201).json(artifact);
+    } catch (error) {
+      console.error("Error creating artifact:", error);
+      res.status(500).json({ error: "Failed to create artifact" });
+    }
+  });
+
+  // Get the CORE_IDENTITY.md foundational artifact
+  app.get("/api/org-persona/core-identity", async (req: Request, res: Response) => {
+    try {
+      const artifacts = await orgPersonaStorage.getArtifactsByCognitiveFeature("reasoning");
+      const coreIdentity = artifacts.find((a) => 
+        (a.content?.document === "CORE_IDENTITY.md" && a.metadata?.philosophicalFramework) ||
+        (a.content?.isFoundational === true && a.content?.selfReferential === true)
+      );
+      
+      if (!coreIdentity) {
+        return res.status(404).json({ error: "CORE_IDENTITY.md artifact not found" });
+      }
+      
+      res.json(coreIdentity);
+    } catch (error) {
+      console.error("Error fetching CORE_IDENTITY:", error);
+      res.status(500).json({ error: "Failed to fetch CORE_IDENTITY" });
+    }
+  });
+
+  // Store memory
+  app.post("/api/org-persona/memory", async (req: Request, res: Response) => {
+    try {
+      const memory = await orgPersonaStorage.storeMemory(req.body);
+      res.status(201).json(memory);
+    } catch (error) {
+      console.error("Error storing memory:", error);
+      res.status(500).json({ error: "Failed to store memory" });
+    }
+  });
+
+  // Retrieve memories by type
+  app.get("/api/org-persona/memory/:type", async (req: Request, res: Response) => {
+    try {
+      const { type } = req.params;
+      const limitParam = parseInt(req.query.limit as string);
+      const limit = isNaN(limitParam) ? 10 : Math.min(Math.max(limitParam, 1), 100);
+      const memories = await orgPersonaStorage.retrieveMemory(type, limit);
+      res.json(memories);
+    } catch (error) {
+      console.error("Error retrieving memories:", error);
+      res.status(500).json({ error: "Failed to retrieve memories" });
+    }
+  });
+
+  // Get all participants
+  app.get("/api/org-persona/participants", async (req: Request, res: Response) => {
+    try {
+      const participants = await orgPersonaStorage.getAllParticipants();
+      res.json(participants);
+    } catch (error) {
+      console.error("Error fetching participants:", error);
+      res.status(500).json({ error: "Failed to fetch participants" });
+    }
+  });
+
+  // Create a new participant
+  app.post("/api/org-persona/participants", async (req: Request, res: Response) => {
+    try {
+      const participant = await orgPersonaStorage.createParticipant(req.body);
+      res.status(201).json(participant);
+    } catch (error) {
+      console.error("Error creating participant:", error);
+      res.status(500).json({ error: "Failed to create participant" });
+    }
+  });
+
+  // Get hyperedges for a participant
+  app.get("/api/org-persona/participants/:id/hyperedges", async (req: Request, res: Response) => {
+    try {
+      const participantId = parseInt(req.params.id);
+      if (isNaN(participantId)) {
+        return res.status(400).json({ error: "Invalid participant ID" });
+      }
+      const hyperedges = await orgPersonaStorage.getHyperedgesForParticipant(participantId);
+      res.json(hyperedges);
+    } catch (error) {
+      console.error("Error fetching hyperedges:", error);
+      res.status(500).json({ error: "Failed to fetch hyperedges" });
+    }
+  });
+
+  // Add a hyperedge (relationship)
+  app.post("/api/org-persona/hyperedges", async (req: Request, res: Response) => {
+    try {
+      const hyperedge = await orgPersonaStorage.addHyperedge(req.body);
+      res.status(201).json(hyperedge);
+    } catch (error) {
+      console.error("Error creating hyperedge:", error);
+      res.status(500).json({ error: "Failed to create hyperedge" });
+    }
+  });
+
+  // Update a skillset
+  app.patch("/api/org-persona/skills/:domain", async (req: Request, res: Response) => {
+    try {
+      const { domain } = req.params;
+      const { proficiencyDelta, practiceIncrement } = req.body;
+      
+      // Validate inputs
+      const delta = typeof proficiencyDelta === 'number' ? proficiencyDelta : 0;
+      const increment = typeof practiceIncrement === 'number' ? practiceIncrement : 1;
+      
+      // Validate ranges
+      if (delta < -100 || delta > 100) {
+        return res.status(400).json({ error: "proficiencyDelta must be between -100 and 100" });
+      }
+      if (increment < 0) {
+        return res.status(400).json({ error: "practiceIncrement must be non-negative" });
+      }
+      
+      await orgPersonaStorage.updateSkillset(domain, delta, increment);
+      res.json({ success: true, domain });
+    } catch (error) {
+      console.error("Error updating skillset:", error);
+      res.status(500).json({ error: "Failed to update skillset" });
+    }
+  });
 }

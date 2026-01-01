@@ -112,15 +112,40 @@ PostgreSQL schema using Drizzle ORM with 8 core tables modeling the complete org
 ### API Endpoints
 
 ```
+# Core Persona
 GET    /api/org-persona                    # Get current persona state
 PATCH  /api/org-persona                    # Update persona
-GET    /api/org-persona/influence-weights  # Calculate influence weights
+
+# Memory & Learning
+POST   /api/org-persona/memory             # Store a new memory
+GET    /api/org-persona/memory/:type       # Retrieve memories by type
+
+# Artifacts & Identity
+GET    /api/org-persona/artifacts/:feature # Get artifacts by cognitive feature
+POST   /api/org-persona/artifacts          # Create a new artifact
+GET    /api/org-persona/core-identity      # Get the CORE_IDENTITY.md artifact
+
+# Skills
 GET    /api/org-persona/skills/top         # Top skills by proficiency
+PATCH  /api/org-persona/skills/:domain     # Update skill proficiency
+
+# Network Topology
 GET    /api/org-persona/network/sensors    # Active sensors
 GET    /api/org-persona/network/actuators  # Active actuators
+
+# Behavior & Patterns
 POST   /api/org-persona/behavior           # Record behavior
 GET    /api/org-persona/behavior/:type     # Get behavior patterns
+
+# Participants & Relationships
+GET    /api/org-persona/participants                    # Get all participants
+POST   /api/org-persona/participants                   # Create participant
+GET    /api/org-persona/participants/:id/hyperedges   # Get relationships
+POST   /api/org-persona/hyperedges                     # Add relationship
+GET    /api/org-persona/influence-weights              # Calculate influence weights
 ```
+
+See [Core Identity Implementation Guide](wiki/guides/dev/core-identity-implementation.md) for detailed API usage examples.
 
 ## Data Flow
 
@@ -154,6 +179,8 @@ Memory Consolidation & Skill Updates
 ## Philosophical Foundation
 
 See [CORE_IDENTITY.md](CORE_IDENTITY.md) for the complete philosophical framework.
+
+**Implementation Guide:** See [Core Identity Implementation Guide](wiki/guides/dev/core-identity-implementation.md) for detailed technical documentation on how the philosophical concepts are implemented in code.
 
 **The Ship of Theseus Resolution:** This system embodies the answer to the ancient paradox - identity persists through transformation via structured continuity mechanisms.
 
